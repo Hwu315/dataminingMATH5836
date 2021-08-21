@@ -169,12 +169,18 @@ class MCMC:
 	def rmse(self, predictions, targets):
 		return np.sqrt(((predictions - targets) ** 2).mean())
 
-	def likelihood_func(self, neuralnet, data, w, tausq):
+	def likelihood_func(self, neuralnet, data, w, tausq): 
+
+
 		y = data[:, self.topology[0]]
 		fx = neuralnet.evaluate_proposal(data, w)
 		rmse = self.rmse(fx, y)
-		loss = -0.5 * np.log(2 * math.pi * tausq) - 0.5 * np.square(y - fx) / tausq
-		return [np.sum(loss), fx, rmse]
+		#loss = np.sum(-0.5 * np.log(2 * math.pi * tausq) - 0.5 * np.square(y - fx) / tausq) #previous implementation
+
+		n = y.shape[0]  # will change for multiple outputs (y.shape[0]*y.shape[1])
+
+		log_lhood = -n/2 * np.log(2 * math.pi * tausq) - (1/(2*tausq)) * np.sum(np.square(y - fx))
+		return [log_lhood, fx, rmse]
 
 	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq):
 		h = self.topology[1]  # number hidden neurons
