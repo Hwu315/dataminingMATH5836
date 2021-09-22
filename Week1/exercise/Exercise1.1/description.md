@@ -3,7 +3,7 @@
 
 Develop a Python or R program to calcualte BMI. Your program first needs to collect some information about the user and then calculate BMI. 
 
-[](bmi.png)
+![Description](bmi.png)
 
 * Date of birth (you can decide about the format of the date);
 
