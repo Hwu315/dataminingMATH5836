@@ -1,116 +1,229 @@
+ 
+ # by R. Chandra
+ #Source: https://github.com/rohitash-chandra/logistic_regression
 
-import numpy as np 
+from math import exp
+import numpy as np
+import random
 
-import matplotlib.pyplot as plt
-
-
-from sklearn import datasets
+SIGMOID = 1
+STEP = 2
+LINEAR = 3
 
  
+random.seed()
+
+class logistic_regression:
+
+	def __init__(self, num_epocs, train_data, test_data, num_features, learn_rate):
+		self.train_data = train_data
+		self.test_data = test_data 
+		self.num_features = num_features
+		self.num_outputs = self.train_data.shape[1] - num_features 
+		self.num_train = self.train_data.shape[0]
+		self.w = np.random.uniform(-0.5, 0.5, num_features)  # in case one output class 
+		self.b = np.random.uniform(-0.5, 0.5, self.num_outputs) 
+		self.learn_rate = learn_rate
+		self.max_epoch = num_epocs
+		self.use_activation = SIGMOID #SIGMOID # 1 is  sigmoid , 2 is step, 3 is linear 
+		self.out_delta = np.zeros(self.num_outputs)
+
+		print(self.w, ' self.w init') 
+		print(self.b, ' self.b init') 
+		print(self.out_delta, ' outdel init')
+
+
+ 
+	def activation_func(self,z_vec):
+		if self.use_activation == SIGMOID:
+			y =  1 / (1 + np.exp(z_vec)) # sigmoid/logistic
+		elif self.use_activation == STEP:
+			y = (z_vec > 0).astype(int) # if greater than 0, use 1, else 0
+			#https://stackoverflow.com/questions/32726701/convert-real-valued-numpy-array-to-binary-array-by-sign
+		else:
+			y = z_vec
+		return y
+ 
+
+	def predict(self, x_vec ): 
+		z_vec = x_vec.dot(self.w) - self.b 
+		output = self.activation_func(z_vec) # Output  
+		return output
+	
+	def gradient(self, x_vec, output, actual):   
+		if self.use_activation == SIGMOID :
+			out_delta =   (output - actual)*(output*(1-output)) 
+		else: # for linear and step function  
+			out_delta =   (output - actual) 
+		return out_delta
+
+	def update(self, x_vec, output, actual):      
+		self.w+= self.learn_rate *( x_vec *  self.out_delta)
+		self.b+=  (1 * self.learn_rate * self.out_delta)
+ 
+
+	def squared_error(self, prediction, actual):
+		return  np.sum(np.square(prediction - actual))/prediction.shape[0]# to cater more in one output/class
+ 
+
+
+	def test_model(self, data, tolerance):  
+
+		num_instances = data.shape[0]
+
+		class_perf = 0
+		sum_sqer = 0   
+		for s in range(0, num_instances):	
+
+			input_instance  =  self.train_data[s,0:self.num_features] 
+			actual  = self.train_data[s,self.num_features:]  
+			prediction = self.predict(input_instance) 
+			sum_sqer += self.squared_error(prediction, actual)
+
+			pred_binary = np.where(prediction > (1 - tolerance), 1, 0)
+
+			print(s, actual, prediction, pred_binary, sum_sqer, ' s, actual, prediction, sum_sqer')
+
+ 
+
+			if( (actual==pred_binary).all()):
+				class_perf =  class_perf +1   
+
+		rmse = np.sqrt(sum_sqer/num_instances)
+
+		percentage_correct = float(class_perf/num_instances) * 100 
+
+		print(percentage_correct, rmse,  ' class_perf, rmse') 
+		# note RMSE is not a good measure for multi-class probs
+
+		return ( rmse, percentage_correct)
+
+
+
+
+
+ 
+	def SGD(self):   
+		
+			epoch = 0 
+			shuffle = True
+
+			while  epoch < self.max_epoch:
+				sum_sqer = 0
+				for s in range(0, self.num_train): 
+
+					if shuffle ==True:
+						i = random.randint(0, self.num_train-1)
+
+					input_instance  =  self.train_data[i,0:self.num_features]  
+					actual  = self.train_data[i,self.num_features:]  
+					prediction = self.predict(input_instance) 
+					sum_sqer += self.squared_error(prediction, actual)
+					self.out_delta = self.gradient( input_instance, prediction, actual)    # major difference when compared to GD
+					#print(input_instance, prediction, actual, s, sum_sqer)
+					self.update(input_instance, prediction, actual)
+
+			
+				print(epoch, sum_sqer, self.w, self.b)
+				epoch=epoch+1  
+
+			rmse_train, train_perc = self.test_model(self.train_data, 0.3) 
+			rmse_test =0
+			test_perc =0
+			#rmse_test, test_perc = self.test_model(self.test_data, 0.3)
   
- 
-#https://medium.com/@martinpella/logistic-regression-from-scratch-in-python-124c5636b8ac
+			return (train_perc, test_perc, rmse_train, rmse_test) 
+				
 
+	def GD(self):   
+		
+			epoch = 0 
+			while  epoch < self.max_epoch:
+				sum_sqer = 0
+				for s in range(0, self.num_train): 
+					input_instance  =  self.train_data[s,0:self.num_features]  
+					actual  = self.train_data[s,self.num_features:]   
+					prediction = self.predict(input_instance) 
+					sum_sqer += self.squared_error(prediction, actual) 
+					self.out_delta+= self.gradient( input_instance, prediction, actual)    # this is major difference when compared with SGD
 
-class LogisticRegression:
-    def __init__(self, lr, num_iter):
-        self.lr = lr
-        self.num_iter = num_iter
-        self.fit_intercept = True
-        self.verbose = True
-    
-    def __add_intercept(self, X):
-        intercept = np.ones((X.shape[0], 1))
-        #print(intercept, 'intercept')
-        return np.concatenate((intercept, X), axis=1)
-    
-    def __sigmoid(self, z):
-        return 1 / (1 + np.exp(-z))
-    def __loss(self, h, y):
-        return (-y * np.log(h) - (1 - y) * np.log(1 - h)).mean()
-    
-    def fit(self, X, y):
-        if self.fit_intercept:
-            X = self.__add_intercept(X)
-        
-        # weights initialization
-        self.theta = np.zeros(X.shape[1])
-        
-        for i in range(self.num_iter):
-            z = np.dot(X, self.theta)
-            h = self.__sigmoid(z)
-            gradient = np.dot(X.T, (h - y)) / y.size
-            self.theta -= self.lr * gradient
-            
-            if(self.verbose == True and i % 1000 == 0):
-                z = np.dot(X, self.theta)
-                h = self.__sigmoid(z)
-                print( self.__loss(h, y))
-    
-    def predict_prob(self, X):
-        if self.fit_intercept:
-            X = self.__add_intercept(X)
-    
-        return self.__sigmoid(np.dot(X, self.theta))
-    
-    def predict(self, X, threshold):
-        return self.predict_prob(X) >= threshold
+					#print(input_instance, prediction, actual, s, sum_sqer)
+				self.update(input_instance, prediction, actual)
 
+			
+				print(epoch, sum_sqer, self.w, self.b)
+				epoch=epoch+1  
 
+			rmse_train, train_perc = self.test_model(self.train_data, 0.3) 
+			rmse_test =0
+			test_perc =0
+			#rmse_test, test_perc = self.test_model(self.test_data, 0.3)
+  
+			return (train_perc, test_perc, rmse_train, rmse_test) 
+				
+	
  
 
- 
+#------------------------------------------------------------------
+#MAIN
+
+
 
 def main(): 
- 
 
-    iris = datasets.load_iris()
-    x_train = iris.data[:, :2]
+	random.seed()
+	 
 
-    y_train_raw = iris.target
-
-    print(y_train_raw)
-
-
-    y_train = (y_train_raw!= 0) * 1
-
-    print (y_train)
-
-    num_iter=30000
-    lr = 0.1
-
-    model = LogisticRegression(lr, num_iter ) 
-    model.fit(x_train, y_train) 
-    preds = model.predict(x_train, 0.3) 
+	 
+	dataset = [[2.7810836,2.550537003,0],
+		[1.465489372,2.362125076,0],
+		[3.396561688,4.400293529,0],
+		[1.38807019,1.850220317,0],
+		[3.06407232,3.005305973,0],
+		[7.627531214,2.759262235,1],
+		[5.332441248,2.088626775,1],
+		[6.922596716,1.77106367,1],
+		[8.675418651,-0.242068655,1],
+		[7.673756466,3.508563011,1]]
 
 
-    score = (preds == y_train).mean()
+	train_data = np.asarray(dataset) # convert list data to numpy
+	test_data = train_data
+
+	 
+
+	learn_rate = 0.3
+	num_features = 2
+	num_epocs = 20
+
+	print(train_data)
+	 
+
+	lreg = logistic_regression(num_epocs, train_data, test_data, num_features, learn_rate)
+	(train_perc, test_perc, rmse_train, rmse_test) = lreg.SGD()
+	(train_perc, test_perc, rmse_train, rmse_test) = lreg.GD() 
+	 
+
+	#-------------------------------
+	#xor data
 
 
-    print(score, ' is fitness score - correct')
+	xor_dataset= [[0,0,0],
+		[0,1,1],
+		[1,0,1],
+		[1,1,0] ]
 
-
-    print(preds)
-
-
-    coefficients = model.theta
-
-
-
-    print(coefficients, ' coefficients')
-
-
-
-
-
-
- 
-
-
-
+	xor_data = np.asarray(xor_dataset) # convert list data to numpy
 
 
 
-if __name__ == '__main__':
-    main()
+	num_epocs = 20
+	learn_rate = 0.9
+	num_features = 2
 
+	lreg = logistic_regression(num_epocs, xor_data, xor_data, num_features, learn_rate)
+	(train_perc, test_perc, rmse_train, rmse_test) = lreg.SGD()
+	(train_perc, test_perc, rmse_train, rmse_test) = lreg.GD() 
+
+
+if __name__ == "__main__": main()
