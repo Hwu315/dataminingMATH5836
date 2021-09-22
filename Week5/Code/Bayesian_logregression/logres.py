@@ -104,6 +104,8 @@ class MCMC:
 		loss = -0.5 * np.log(2 * math.pi * tausq) - 0.5 * np.square(y - fx) / tausq
 		 
 		return [np.sum(loss), fx, accuracy]
+ 
+
 
 	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq): 
 		param = self.topology[0]  + 1 # number of parameters in model
@@ -203,7 +205,7 @@ class MCMC:
 				rmse_test[i + 1,] = rmsetest
 
 
-				#print (likelihood, prior_likelihood, rmsetrain, rmsetest, w, 'accepted')
+				print (likelihood, prior_likelihood, rmsetrain, rmsetest, w, 'accepted')
 
 				pos_w[i + 1,] = w_proposal
 				pos_tau[i + 1,] = tau_pro
@@ -242,7 +244,7 @@ class MCMC:
 		# let us next test the Bayesian model using the posterior distributions over n trials
 
 
-		num_trials = 100
+		num_trials = 10
 
 		accuracy = np.zeros(num_trials)
 
@@ -339,7 +341,7 @@ def main():
 		MinCriteria = 0.005  # stop when RMSE reaches MinCriteria ( problem dependent)
 
 
-		numSamples = 5000 # need to decide yourself
+		numSamples = 2000 # need to decide yourself
 
 		mcmc = MCMC(numSamples, traindata, testdata, topology, activation)  # declare class
 

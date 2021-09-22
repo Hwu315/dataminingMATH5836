@@ -164,6 +164,17 @@ class MCMC:
 		 
 		return [loss, fx, accuracy]
 
+	
+	def likelihood_func_(self, model, data, w, tausq):
+		y = data[:, self.topology[0]:]
+		fx = model.evaluate_proposal(data, w) 
+		accuracy = self.rmse(fx, y) #RMSE 
+		n = (y.shape[0] * y.shape[1]) # number of samples x number of outputs (prediction horizon)
+		p = - (n/2) * np.log(2 * math.pi * tausq) 
+		log_lhood =  p - ((1/2*tausq)  *  np.sum(np.square(y- fx)) )
+
+		return [log_lhood, fx, accuracy]
+
 	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq): 
 		param = (self.topology[0]  * self.topology[1]) + self.topology[1] # number of parameters in model
 		part1 = -1 * (param / 2) * np.log(sigma_squared)
@@ -415,7 +426,7 @@ def main():
 		MinCriteria = 0.005  # stop when RMSE reaches MinCriteria ( problem dependent)
 
 
-		numSamples = 5000# need to decide yourself
+		numSamples = 2000# need to decide yourself
 
 		mcmc = MCMC(numSamples, traindata, testdata, topology, activation)  # declare class
 

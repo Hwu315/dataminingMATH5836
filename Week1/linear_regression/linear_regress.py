@@ -1,128 +1,76 @@
-#import statsmodels.api as sm 
-
 import numpy as np 
 
 import matplotlib.pyplot as plt
 
-
 from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error, r2_score
-
-
 import random
 
-#http://archive.ics.uci.edu/ml/machine-learning-databases/housing/
 
-#http://archive.ics.uci.edu/ml/datasets/iris
-#https://en.wikipedia.org/wiki/Iris_flower_data_set
-
-#https://scikit-learn.org/stable/auto_examples/linear_model/plot_ols.html
-#https://www.cs.toronto.edu/~frossard/post/linear_regression/
-
-#https://en.wikipedia.org/wiki/Dot_product
+from numpy import *  
+from sklearn.metrics import accuracy_score 
+from sklearn.preprocessing import Normalizer
+from sklearn.model_selection import train_test_split
 
 
+from scipy.stats import pearsonr
 
-
-
-def get_data():
-
-    
+def get_data(normalise):
+    #Source: University of California. (n.d). Machine-learning-databases. http://archive.ics.uci.edu/ml/machine-learning-databases/housing/
+    #Source: University of California. (n.d). Machine learning repository. http://archive.ics.uci.edu/ml/datasets/iris 
+    #Source: Iris flower dataset. (2020). Wikipedia. https://en.wikipedia.org/wiki/Iris_flower_data_set
+ 
     #house_data = datasets.load_boston() #Scikit-learn provides a handy description of the dataset, and it can be easily viewed by:
-    #print (data.DESCR) 
-    #print (data)
+
+
+    data_in = genfromtxt('raw_data/housing.data')
+
+    #data_in = genfromtxt('raw_data/housing.data', delimiter=",") # in case of csv data
+
+    #print(data_in)
+
+    #data_inputx = data_in[:,0:13] # all features 0, - 12
+    #data_inputx = data_in[:,[1]]  # one feature
+    data_inputx = data_in[:,[5,12]]  # two features (RM LSTAT)
+
+    #https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.Normalizer.html#sklearn.preprocessing.Normalizer
+
+    if normalise == True:
+        transformer = Normalizer().fit(data_inputx)  # fit does nothing.
+        data_inputx = transformer.transform(data_inputx)
  
 
-    dataset = np.genfromtxt('processed_data/iris_train.csv',delimiter=',')   # when you have .csv  comma sepeated data  in file
-    
-    
-    print(dataset, ' iris_data')
+    #cov_mat = np.cov(data_in.T)
+
+    corr_mat = np.corrcoef(data_in.T)
+
+    #print(corr_mat, ' is the corr matrix of the data read')
+
+    plt.imshow(corr_mat, cmap='hot', interpolation='nearest')
+    plt.savefig('cov_heatmap.png')
+    plt.clf()
+
+    data_inputy = data_in[:,13] # this is target - so that last col is selected from data
+
+    percent_test = 0.4
+    '''testsize = int(percent_test * data_inputx.shape[0]) 
+    x_train = data_inputx[:-testsize]
+    x_test = data_inputx[-testsize:] 
+    y_train = data_inputy[:-testsize]
+    y_test = data_inputy[-testsize:]'''
 
 
-    # Load the diabetes dataset
-    diabetes = datasets.load_diabetes() 
+      #another way you can use scikit-learn train test split with random state
+    x_train, x_test, y_train, y_test = train_test_split(data_inputx, data_inputy, test_size=percent_test, random_state=0)
 
-    data_input = diabetes.data[:, np.newaxis, 2] 
 
-    x_train = data_input[:-20]
-    x_test = data_input[-20:]
-
-    # Split the targets into training/testing sets
-    y_train = diabetes.target[:-20]
-    y_test = diabetes.target[-20:]
-
-    # Split the data into training/testing sets
 
     return x_train, x_test, y_train, y_test
-
-def generate_syntheticdata():
-
-    data_x = np.linspace(1.0, 10.0, 100)[:, np.newaxis]
-    #print(data_x, ' ** ')
-    data_y = np.sin(data_x) + 0.1 * np.power(data_x, 2) + 0.5 * np.random.randn(100, 1)
-    #print(data_y, ' **** ')
-    
-    data_x /= np.max(data_x) 
-    data_x = np.hstack((np.ones_like(data_x), data_x))
-
-    order = np.random.permutation(len(data_x))
-    portion = 20
-    x_test = data_x[order[:portion]]
-    y_test = data_y[order[:portion]]
-    x_train = data_x[order[portion:]]
-    y_train = data_y[order[portion:]]
-
-    return x_train, x_test, y_train, y_test
-
-
-
-def get_gradient(w, x, y):
-    y_estimate = x.dot(w).flatten()
-    error = (y.flatten() - y_estimate)
-    gradient = -(1.0/len(x)) * error.dot(x)
-    return gradient, np.power(error, 2)
-
-
-def numpy_linear_mod(x_train, x_test, y_train, y_test):
-
-
-    print(' running numpy linear model')
-
-    w = np.random.randn(2)
-    alpha = 0.5
-    tolerance = 1e-5
-
-    # Perform Gradient Descent
-    iterations = 1
-    while True:
-        gradient, error = get_gradient(w, x_train, y_train)
-
-        
-        new_w = w - alpha * gradient
-    
-        # Stopping Condition
-        if np.sum(abs(new_w - w)) < tolerance:
-            print("Converged.")
-            break
-    
-        # Print error every 50 iterations
-        if iterations % 5 == 0:
-            mean_squared_error =  np.sum(error)/error.shape
-            print(iterations, mean_squared_error)
-    
-        iterations += 1
-        w = new_w
-
-
-
-
-
-
-
-
+  
 
     
-def scipy_linear_mod(x_train, x_test, y_train, y_test):
+def scikit_linear_mod(x_train, x_test, y_train, y_test):
+    #source: Scikit Learn. (n.d). Linear Regression Example. https://scikit-learn.org/stable/auto_examples/linear_model/plot_ols.html 
 
     print(' running scipy linear model')
 
@@ -140,41 +88,33 @@ def scipy_linear_mod(x_train, x_test, y_train, y_test):
     # The coefficients
     print('Coefficients: \n', regr.coef_)
     # The mean squared error
-    print("Mean squared error: %.2f" % mean_squared_error(y_test, y_pred))
+    print("Mean squared error: %.2f" % np.sqrt(mean_squared_error(y_test, y_pred)))
     # Explained variance score: 1 is perfect prediction
-    print('Variance score: %.2f' % r2_score(y_test, y_pred))
+    print('R2 score: %.2f' % r2_score(y_test, y_pred))
 
-    # Plot outputs
-    plt.scatter(x_test, y_test,  color='black')
-    plt.plot(x_test, y_pred, color='blue', linewidth=3)
+    # Plot residuals
 
-    plt.xticks(())
-    plt.yticks(())
-
-    plt.savefig('resultlinear_reg.png')
+    residuals = y_pred - y_test
+    plt.plot(residuals, linewidth=1)
+ 
+    plt.savefig('scikit_linear.png')
 
 
 
 
 def main(): 
 
-    x_train, x_test, y_train, y_test = get_data()
+    normalise = False
+
+    x_train, x_test, y_train, y_test = get_data(normalise)
 
     #print(x_train, ' x_train')
     #print(y_train, ' y_train')
     #print(x_test, ' x_test')
 
-    scipy_linear_mod(x_train, x_test, y_train, y_test)
 
-
-    x_train, x_test, y_train, y_test = generate_syntheticdata()
-
-    #print(x_train, ' x_train')
-    #print(y_train, ' y_train')
-    #print(x_test, ' x_test')
-    #print(y_test, ' x_test')
-
-
+    scikit_linear_mod(x_train, x_test, y_train, y_test)
+ 
     numpy_linear_mod(x_train, x_test, y_train, y_test)
 
 
@@ -183,5 +123,9 @@ def main():
 
 
 
+
+
+
+
 if __name__ == '__main__':
-    main()
+     main()
