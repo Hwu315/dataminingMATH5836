@@ -3,7 +3,7 @@
 
 Develop a logistic regression model for binary classification in R or Python and do the following: 
 
-* 60/40 train test spilt and report training and test performance in terms  classification performance 
+* Create 60/40 train test spilt and report training and test performance in terms  classification performance 
 
 * Report AUC and ROC and Precision-Recall curve, F1 Score. 
 
