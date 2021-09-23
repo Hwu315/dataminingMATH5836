@@ -43,3 +43,11 @@ Ignore the +1.5 in ring-age and use the raw data
 
 
 ## Option II: Data essay
+
+Option II: Essay in data science
+
+* Discuss what are the key similarities and differences between machine learning and data mining  (2.5 Marks).
+* Discuss the similarities and differences between linear and logistic regression models with applications (2.5 Marks). 
+
+
+Limit each to around 400 words and cite references (APA style) to support your viewpoint. Upload pdf of the report.
