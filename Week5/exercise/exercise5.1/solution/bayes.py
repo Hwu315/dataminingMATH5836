@@ -310,9 +310,8 @@ def histogram_trace(pos_points, fname): # this is function to plot (not part of 
 
 def get_data(normalise, i): 
 
-    data_in = genfromtxt('data/energy/ENB2012_data.csv', delimiter=",") # in case of csv data
- 
-
+    data_in = genfromtxt('data/energy/ENB2012_data.csv', delimiter=",") # in case of csv data 
+    
     data_inputx = data_in[:,0:8] # all features 0, - 7
     #data_inputx = data_in[:,[1]]  # one feature
     #data_inputx = data_in[:,[0,3]]  # two features   
@@ -337,17 +336,12 @@ def scikit_linear_mod(x_train, x_test, y_train, y_test):
  
     # Train the model using the training sets
     regr.fit(x_train, y_train)
-
-    # Make predictions using the testing set
+ 
     y_pred = regr.predict(x_test)
  
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))  
     rsquared = r2_score(y_test, y_pred) 
- 
-    '''residuals = y_pred - y_test
-    plt.plot(residuals, linewidth=1)
- 
-    plt.savefig('scikit_linear.png')'''
+  
 
     return rmse, rsquared, regr.coef_
 
@@ -384,6 +378,8 @@ def main():
 			features = 8  #
 			output = 1
 			activation = True # linear regression # y data is   normalised - it is [0,1]
+
+		# same code can be extended for classification problems, but you need to report accuracy rather than RMSE
 
 
 
