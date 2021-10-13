@@ -13,7 +13,7 @@ from math import exp
  
 random.seed()
 
-class logistic_regression:
+class lin_model:
 
 	def __init__(self, num_epocs, train_data, test_data, num_features, learn_rate, activation):
 		self.train_data = train_data
@@ -102,8 +102,8 @@ class MCMC:
 		fx = model.evaluate_proposal(data, w) 
 		accuracy = self.rmse(fx, y) #RMSE 
 		loss = -0.5 * np.log(2 * math.pi * tausq) - 0.5 * np.square(y - fx) / tausq
-		 
-		return [np.sum(loss), fx, accuracy]
+		return [np.sum(loss), fx, accuracy] 
+
  
 
 
@@ -148,7 +148,7 @@ class MCMC:
 		# eta is not used in multinomial likelihood. 
  
 
-		model = logistic_regression(0 ,  self.traindata, self.testdata, self.topology[0], 0.1, self.regression) 
+		model = lin_model(0 ,  self.traindata, self.testdata, self.topology[0], 0.1, self.regression) 
 
 		pred_train = model.evaluate_proposal(self.traindata, w)
 		pred_test = model.evaluate_proposal(self.testdata, w)
